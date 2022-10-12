@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "App"
+		},
+		{
+			"path":"esp",
+		},
+		{
+			"path":".",
+			"name":"Root"
+		},
+	],
+	"settings": {}
+}
