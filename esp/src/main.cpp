@@ -1,9 +1,31 @@
 #include <Arduino.h>
+#include "client.hpp"
+#include "control.hpp"
+#include "app.hpp"
+
+unsigned long int deltaT;
 
 void setup() {
-  // put your setup code here, to run once:
+    // Init serial and internet connections
+    Serial.begin(115200);
+    client::init();
+
+    // Init camera
+    app_init_camera();
+
+    // Init servos and controller data
+    control::init();
+
+    // Start the web server
+    startServer();
+    startStream();
+
+    deltaT = millis();
+    
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+    deltaT = millis() - deltaT;
+    control::loop(deltaT);
+    delay(50);
 }
