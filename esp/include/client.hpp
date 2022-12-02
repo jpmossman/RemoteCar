@@ -7,6 +7,7 @@ namespace client {
     void init(void);
     bool add_callback(char *topic, callback_t callback);
     bool reconnect(void);
+    bool publish(char *topic, byte *message, unsigned int len);
     // ? bool status(void);
     // ? loop
 

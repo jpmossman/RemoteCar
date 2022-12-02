@@ -72,6 +72,10 @@ bool client::reconnect(void) {
     return false;
 }
 
+bool client::publish(char *topic, byte *message, unsigned int len) {
+    return mqtt_client.publish(topic, message, len);
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~ Private Function Definitions ~~~~~~~~~~~~~~~~~~~~~~~
 
 void on_message(char *topic, byte *message, unsigned int len){
