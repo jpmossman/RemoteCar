@@ -44,6 +44,11 @@ void client::init(void) {
     // Start MQTT client
     mqtt_client.setServer(mqtt_broker_ip, mqtt_broker_port);
     mqtt_client.setCallback(on_message);
+
+    // Connect client
+    while (!mqtt_client.connected()) {
+        reconnect();
+    }
 }
 
 bool client::add_callback(char *topic, client::callback_t callback) {
@@ -52,9 +57,17 @@ bool client::add_callback(char *topic, client::callback_t callback) {
 }
 
 bool client::reconnect(void) {
-    // TODO: Fix
     if (!mqtt_client.connected()) {
-        reconnect();
+        Serial.print("Attempting MQTT connection...");
+        if (mqtt_client.connect(clientID, willTopic, willQos, willRetain, willMessage)) {
+            Serial.println("connected");
+        }
+        else {
+            Serial.print("failed, rc=");
+            Serial.print(mqtt_client.state());
+            Serial.println(" try again in 5 seconds");
+            delay(5000);
+        }
     }
     return false;
 }
