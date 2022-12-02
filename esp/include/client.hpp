@@ -8,6 +8,7 @@ namespace client {
     bool add_callback(const char *topic, callback_t callback);
     bool topic_matches_sub(const char *topic, const char *sub);   
     bool reconnect(void);
+    bool publish(char *topic, byte *message, unsigned int len);
     // ? bool status(void);
     // ? loop
 
