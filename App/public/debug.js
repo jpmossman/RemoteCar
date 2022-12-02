@@ -1,10 +1,12 @@
 (() => {
 
     class Joystick extends EventTarget {
+        static count = 0;
 
         constructor(elem = null, options = {}) {
             super();
             this.elem = elem ? elem : Joystick.createNewElement();
+            Joystick.count++;
             // this.mode = options.mode || 'velocity';
             // this.sendPath = options.sendTo;
             this.sendInt = (options.sendInterval > 50) ? options.sendInterval : 50;
@@ -26,6 +28,7 @@
         static createNewElement() {
             let joystick = document.createElement('div');
             joystick.setAttribute('class', 'joystick');
+            joystick.setAttribute('id', `joystick-${Joystick.count}`);
             joystick.appendChild(document.createElement('div'));
             return joystick;
         }
@@ -144,22 +147,10 @@
                 if (ignoreLastDispatch || now > this._lastDispatch + this.sendInt) {
                     this._lastDispatch = now;
                     let polarCoords = this._processPositionData();
-                    // let uri;
-                    // if (this.sendPath) {
-                    //     uri = `${this.sendPath}?mode=${this.mode}&x=${pCoords.x}&y=${pCoords.y}`;
-                    //     fetch(uri, {
-                    //         method: 'POST'
-                    //     });
-                    // }
 
-                    // if (this.debug) {
-                    //     if (uri) {
-                    //         console.log(`[ID: '${this.elem.id}']: StickChange (POST '${uri}')`);
-                    //     }
-                    //     else {
-                    //         console.log(`[ID: '${this.elem.id}']: StickChange (x: ${pCoords.x}, y: ${pCoords.y})`);
-                    //     }
-                    // }
+                    if (this.debug) {
+                        console.log(`[ID: '${this.elem.id}']: on "move" - (rad: ${polarCoords.rad}, mag: ${polarCoords.mag})`);
+                    }
                     this.dispatchEvent(new CustomEvent('move', { detail: polarCoords }));
                 }
             }
@@ -172,10 +163,119 @@
         }
     }
 
-    class InputAnalyzer {
+    class Button extends EventTarget {
+        static count = 0;
 
-        constructor(inputObject, size) {
-            this.elem = document.createElement('div');
+        constructor(elem = null, options = {}) {
+            super();
+            this.elem = elem ? elem : Button.createNewElement();
+            Button.count++;
+            this.pressed = false;
+            // this.pressedPath = options.pressed;
+            // this.releasedPath = options.released;
+            this.debug = options.debug == true;
+            this.enabled = false;
+            this.initialized = false;
+            this.cbs = {
+                press: this._handlePress.bind(this),
+                release: this._handleRelease.bind(this)
+            }
+        }
+
+        static createNewElement() {
+            let button = document.createElement('div');
+            button.setAttribute('class', 'button');
+            button.setAttribute('id', `button-${Button.count}`);
+            return button;
+        }
+
+        enable() {
+            if (!this.initialized) return;
+            this.enabled = true;
+            this.elem.classList.remove('disabled');
+        }
+
+        disable() {
+            this.enabled = false;
+            this.elem.classList.add('disabled');
+        }
+
+        init() {
+            if (this.initialized) return;
+            this.elem.addEventListener('touchstart', this.cbs.press);
+            this.elem.addEventListener('mousedown', this.cbs.press);
+            this.elem.addEventListener('touchend', this.cbs.release);
+            this.elem.addEventListener('mouseup', this.cbs.release);
+
+            this.pressed = false;
+            this.initialized = true;
+
+            this.enable();
+        }
+
+        disconnect() {
+            if (this.initialized) {
+                this.elem.removeEventListener('touchstart', this.cbs.press);
+                this.elem.removeEventListener('mousedown', this.cbs.press);
+                this.elem.removeEventListener('touchend', this.cbs.release);
+                this.elem.removeEventListener('mouseup', this.cbs.release);
+            }
+
+            this.initialized = false;
+
+            this.disable();
+        }
+
+        _handlePress(e) {
+            e.preventDefault();
+            if (!this.enabled) return;
+
+            this.elem.classList.add('pressed');
+
+            this.pressed = true;
+
+            this._dispatchState();
+        }
+
+        _handleRelease(e) {
+            e.preventDefault();
+            if (!this.enabled) return;
+            this.elem.classList.remove('pressed');
+
+            this.pressed = false;
+
+            this._dispatchState();
+        }
+
+        _dispatchState() {
+            if (this.debug) {
+                console.log(`[ID: '${this.elem.id}']: on "change" - Pressed: ${this.pressed}`);
+            }
+
+            this.dispatchEvent(new CustomEvent('change', { detail: this.pressed }));
+        }
+    }
+
+    class EventHandlingTextVisualizer {
+
+        constructor(transformer = null, elem = null) {
+            this.elem = elem ? elem : EventHandlingTextVisualizer.createNewElement();
+            this.transform = transformer;
+        }
+
+        static createNewElement() {
+            let elem = document.createElement('div');
+            return elem;
+        }
+
+        handle(data) {
+            if (this.transform) {
+                let text = this.transform(data);
+                this.elem.innerHTML = text;
+            }
+            else {
+                this.elem.innerHTML = JSON.stringify(data);
+            }
         }
     }
 
@@ -191,18 +291,58 @@
     }
     else {
         var socket = null;
+        console.log('Unable to connect to server. Socketio will not be used.');
     }
 
 
     document.addEventListener('DOMContentLoaded', (e) => {
         let js = new Joystick();
+        js.elem.setAttribute('style', 'position: absolute; right: 0px; bottom: 0px;');
         document.body.appendChild(js.elem);
         js.init();
+        let debugTxtJs = new EventHandlingTextVisualizer((data) => {
+            return `[Joystick] angle: ${data.rad}, magnitude: ${data.mag}`;
+        });
+        document.body.appendChild(debugTxtJs.elem);
         js.addEventListener('move', (e) => {
             let data = { rad: Math.floor(e.detail.rad * 255 / (2 * Math.PI)), mag: Math.floor(e.detail.mag * 255 / 100) };
-            console.log(data);
+            // console.log(data);
+            debugTxtJs.handle(data);
             socket?.emit('input/joystick', data);
         });
+
+        let btn = new Button();
+        btn.elem.setAttribute('style', 'position: absolute; right: 0px; bottom: 130px;');
+        document.body.appendChild(btn.elem);
+        btn.init();
+        let debugTxtBtn = new EventHandlingTextVisualizer((data) => {
+            return `[Button] pressed: ${data}`;
+        });
+        document.body.appendChild(debugTxtBtn.elem);
+        btn.addEventListener('change', (e) => {
+            let pressed = e.detail;
+            // console.log(pressed);
+            debugTxtBtn.handle(pressed);
+            socket?.emit('input/light', pressed);
+        });
+
+        let debugTxtBat = new EventHandlingTextVisualizer((data) => {
+            return `[Battery] percentage: ${data}`;
+        });
+        document.body.appendChild(debugTxtBat.elem);
+        socket?.on('output/bat', (data) => { debugTxtBat.handle(data) });
+
+        let debugTxtLight = new EventHandlingTextVisualizer((data) => {
+            return `[Light] state: ${data ? 'on' : 'off'}`;
+        });
+        document.body.appendChild(debugTxtLight.elem);
+        socket?.on('output/light', (data) => { debugTxtLight.handle(data) });
+
+        let debugTxtUss1 = new EventHandlingTextVisualizer((data) => {
+            return `[USS1] distance: ${data}`;
+        });
+        document.body.appendChild(debugTxtUss1.elem);
+        socket?.on('output/uss1', (data) => { debugTxtUss1.handle(data) });
     });
 
 })();

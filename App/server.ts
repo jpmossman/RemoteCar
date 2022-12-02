@@ -90,6 +90,7 @@ function main() {
             brokerIp = tempIp;
         }
     }
+    console.log(brokerIp);
 
     let server = new WebServer(port, brokerIp);
 }
