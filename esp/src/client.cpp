@@ -1,6 +1,7 @@
 #include "client.hpp"
 #include <WiFi.h>
-
+#include <vector>
+#include <string>
 // ~~~~~~~~~~~~~~~~~~~~~~~ Private Variable Declarations ~~~~~~~~~~~~~~~~~~~~~~
 
 // Broker info
@@ -13,6 +14,10 @@ const char* willTopic = "car/status";
 const uint8_t willQos = 1;
 const boolean willRetain = true;
 const char* willMessage = "offline";
+
+// Callback
+std::vector<client::callback_t> calls;
+std::vector<std::string> topics;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~ Private Function Declarations ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -51,9 +56,13 @@ void client::init(void) {
     }
 }
 
-bool client::add_callback(char *topic, client::callback_t callback) {
-    // TODO: this
-    return false;
+void client::add_callback(const char *topic, client::callback_t callback) {
+    calls.push_back(callback);
+    topics.push_back(topic);
+}
+
+bool client::topic_matches_sub(const char *topic, const char *sub) {
+    return true;
 }
 
 bool client::reconnect(void) {
@@ -89,4 +98,10 @@ void on_message(char *topic, byte *message, unsigned int len){
         messageTemp += (char)message[i];
     }
     Serial.println("");
+
+    for(size_t i = 0; i < calls.size(); i++) {
+        if (topic_matches_sub(topic,topics[i])) {
+            calls[i](topic,message,len);
+        }
+    }
 }
