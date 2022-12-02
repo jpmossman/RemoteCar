@@ -1,0 +1,117 @@
+/* .stream-container {
+    position: relative;
+    min-width: 160px;
+} */
+
+/* .image-container>img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-top: 8px;
+} */
+
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.hidden {
+    display: none;
+}
+
+.disabled {
+    pointer-events: none;
+}
+
+/* .platform-selection {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    background-color: white;
+}
+.platform-selection > div {
+    cursor: pointer;
+    margin: 20px;
+    text-decoration: underline;
+} */
+
+/* .main-view {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    position: absolute;
+    top: 0px;
+} */
+
+
+/* .stream-container {
+    position: relative;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+} */
+
+/* .stream-container>img {
+    display: block;
+    width: 100%;
+    height: auto;
+} */
+
+.button {
+    width: 50px;
+    height: 50px;
+    background-color: gray;
+    border-radius: 50%;
+    margin: 15px;
+}
+
+.button.pressed {
+    background-color: black;
+}
+
+.joystick {
+    width: 100px;
+    height: 100px;
+    background-color: gray;
+    border-radius: 50%;
+    margin: 30px;
+    position: relative;
+}
+
+.joystick>div {
+    width: 50%;
+    height: 50%;
+    background-color: darkgray;
+    border-radius: 50%;
+    position: absolute;
+    top: 25%;
+    left: 25%;
+}
+
+.joystick.released>div {
+    transition: top 0.2s, left 0.2s;
+}
+
+/* .desktop .stream-container {
+    position: absolute;
+    background-color: gray;
+    width: 300px;
+    height: 250px;
+    margin: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.desktop .stream-container * {
+    pointer-events: none;
+} */
