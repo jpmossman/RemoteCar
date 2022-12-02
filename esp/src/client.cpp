@@ -51,7 +51,7 @@ void client::init(void) {
     mqtt_client.setCallback(on_message);
 }
 
-void client::add_callback(const char *topic, client::callback_t callback) {
+bool client::add_callback(const char *topic, client::callback_t callback) {
     calls.push_back(callback);
     topics.push_back(topic);
 }
@@ -83,7 +83,7 @@ void on_message(char *topic, byte *message, unsigned int len){
     Serial.println("");
 
     for(size_t i = 0; i < calls.size(); i++) {
-        if (topic_matches_sub(topic,topics[i])) {
+        if (client::topic_matches_sub(topic,topics[i].c_str())) {
             calls[i](topic,message,len);
         }
     }
